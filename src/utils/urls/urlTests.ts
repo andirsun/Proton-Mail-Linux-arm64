@@ -3,12 +3,23 @@ import { getConfig } from "../config";
 
 const sessionRegex = /(?!:\/u\/)(\d+)(?!:\/)/g;
 export const getSessionID = (url?: string) => {
+    if (!url) {
+        return null;
+    }
+
     try {
         const pathName = new URL(url).pathname;
-        return pathName.match(sessionRegex)?.[0];
+
+        const sessionID = pathName.match(sessionRegex)?.[0];
+
+        if (isNaN(Number(sessionID))) {
+            return null;
+        }
+
+        return sessionID;
     } catch (error) {
         Logger.error("getSessionID", error);
-        return false;
+        return null;
     }
 };
 
@@ -60,8 +71,8 @@ export const isAccoutLite = (host: string) => {
 
 export const isUpgradeURL = (host: string) => {
     try {
-        const hostURl = new URL(host);
-        return hostURl.pathname.includes("/upgrade") && hostURl.searchParams.size > 0;
+        const hostURL = new URL(host);
+        return hostURL.pathname.includes("/upgrade") && hostURL.searchParams.size > 0;
     } catch (error) {
         Logger.error("isUpgradeURL", error);
         return false;

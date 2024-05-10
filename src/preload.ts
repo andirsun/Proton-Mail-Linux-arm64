@@ -1,38 +1,28 @@
 import { contextBridge, ipcRenderer } from "electron";
 import Logger from "electron-log";
-import { IPCMessagePayload, IPCMessageType } from "./ipc/ipcConstants";
+import {
+    DESKTOP_FEATURES,
+    IPCClientUpdateMessagePayload,
+    IPCClientUpdateMessageType,
+    IPCGetInfoMessage,
+} from "./ipc/ipcConstants";
 
 contextBridge.exposeInMainWorld("ipcInboxMessageBroker", {
-    send: <T extends IPCMessageType>(type: IPCMessageType, payload: IPCMessagePayload<T>) => {
+    hasFeature: (feature: keyof typeof DESKTOP_FEATURES) => {
+        Logger.info(`Checking if feature is available: ${feature}`);
+        return ipcRenderer.sendSync("hasFeature", feature);
+    },
+
+    getInfo: <T extends IPCGetInfoMessage["type"]>(type: T): Extract<IPCGetInfoMessage, { type: T }>["result"] => {
+        Logger.info(`Requesting info from host: ${type}`);
+        return ipcRenderer.sendSync("getInfo", type);
+    },
+
+    send: <T extends IPCClientUpdateMessageType>(
+        type: IPCClientUpdateMessageType,
+        payload: IPCClientUpdateMessagePayload<T>,
+    ) => {
         Logger.info(`Sending IPC message: ${type}`);
-        switch (type) {
-            case "updateNotification":
-                ipcRenderer.send("updateNotification", payload);
-                break;
-            case "userLogout":
-                ipcRenderer.send("userLogout");
-                break;
-            case "clearAppData":
-                ipcRenderer.send("userLogout");
-                break;
-            case "oauthPopupOpened":
-                ipcRenderer.send("oauthPopupOpened", payload);
-                break;
-            case "openExternal":
-                ipcRenderer.send("openExternal", payload);
-                break;
-            case "trialEnd":
-                ipcRenderer.send("trialEnd", payload);
-                break;
-            case "changeView":
-                ipcRenderer.send("changeView", payload);
-                break;
-            case "showNotification":
-                ipcRenderer.send("showNotification", payload);
-                break;
-            default:
-                Logger.error(`Unknown IPC message type: ${type}`);
-                break;
-        }
+        ipcRenderer.send("clientUpdate", { type, payload });
     },
 });

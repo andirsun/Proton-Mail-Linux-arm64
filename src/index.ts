@@ -31,6 +31,7 @@ import {
     updateView,
     viewCreationAppStartup,
 } from "./utils/view/viewManagement";
+import pkg from "../package.json";
 
 if (require("electron-squirrel-startup")) {
     app.quit();
@@ -41,6 +42,10 @@ app.enableSandbox();
 
 // Config initialization
 saveAppID();
+
+if (!app.isPackaged) {
+    app.commandLine.appendSwitch("ignore-certificate-errors");
+}
 
 // Log initialization
 Logger.initialize({ preload: true });
@@ -62,7 +67,7 @@ if (app.isDefaultProtocolClient("mailto")) {
     Logger.info("App is not default mailto client");
 }
 
-app.setAppUserModelId("com.squirrel.proton_mail.ProtonMail");
+app.setAppUserModelId(pkg.config.appUserModelId);
 
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -79,7 +84,7 @@ if (!gotTheLock) {
             mainWindow.focus();
         }
 
-        handleMailToUrls(commandLine.pop());
+        handleMailToUrls(commandLine?.pop() || "");
     });
 
     app.whenReady().then(() => {
@@ -176,14 +181,13 @@ app.on("web-contents-created", (_ev, contents) => {
 
         // This is used to redirect users to the external browser for internal upgrade modals
         if (isHostAccount(url) && isUpgradeURL(url)) {
-            shell.openExternal(url);
-            return preventDefault(ev);
+            return;
         }
 
         const sessionID = getSessionID(url);
         const calendarView = getCalendarView();
-        const calendarSession = getSessionID(calendarView.webContents.getURL());
-        if (isHostMail(url) && sessionID && !calendarSession && !isNaN(sessionID as unknown as any)) {
+        const calendarSessionID = getSessionID(calendarView.webContents.getURL());
+        if (isHostMail(url) && sessionID && !calendarSessionID) {
             Logger.info("Refresh calendar session", sessionID);
             reloadCalendarWithSession(sessionID);
         }
@@ -193,13 +197,8 @@ app.on("web-contents-created", (_ev, contents) => {
 
     contents.on("will-navigate", (details) => {
         Logger.info("will-navigate");
-        if (!isHostAllowed(details.url) && !global.oauthProcess) {
-            return preventDefault(details);
-        }
 
-        // This is used to redirect users to the external browser for upsell modals
-        if (isHostAccount(details.url) && isUpgradeURL(details.url)) {
-            shell.openExternal(details.url);
+        if (!isHostAllowed(details.url) && !global.oauthProcess && !global.subscriptionProcess) {
             return preventDefault(details);
         }
 
@@ -233,6 +232,9 @@ app.on("web-contents-created", (_ev, contents) => {
             return { action: "allow" };
         } else if (global.oauthProcess) {
             Logger.info("Open OAuth link in app");
+            return { action: "allow" };
+        } else if (global.subscriptionProcess) {
+            Logger.info("Open Subscription link in modal");
             return { action: "allow" };
         } else {
             Logger.info("Open link in browser");
