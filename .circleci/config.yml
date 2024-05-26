@@ -35,14 +35,19 @@ jobs:
           install-yarn: true
           node-version: "20"
       - run:
+          # This is used to be able to make .rpm packages
           name: "Install FPM enviroment"
           command: sudo apt-get install ruby-dev build-essential rpm && sudo gem i fpm -f
       - run:
           name: "Install dependencies"
           command: npm install
       - run:
+          name: "echo an env var that is part of our context"
+          command: |
+            echo $GITHUB_TOKEN
+      - run:
           name: "Publish the app"
-          command: npm run publish
+          command: GITHUB_TOKEN=$GITHUB_TOKEN npm run publish
           environment:
             GITHUB_TOKEN: $GITHUB_TOKEN
 
