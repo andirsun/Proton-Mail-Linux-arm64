@@ -32,6 +32,7 @@ jobs:
       # Checkout the code as the first step.
       - checkout
       - node/install:
+          install-yarn: true
           node-version: "20"
       - run:
           name: "Install FPM enviroment"
