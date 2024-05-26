@@ -12,12 +12,12 @@ orbs:
 workflows:
   release-app:
     jobs:
-      - release
-          # # Run this job only when a commit is pushed to the main branch.
-          # filters:
-          #   branches:
-          #     only:
-          #       - main
+      - release:
+          # Run this job only when a commit is pushed to the main branch.
+          filters:
+            branches:
+              only:
+                - main
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/jobs-steps/#jobs-overview & https://circleci.com/docs/configuration-reference/#jobs
@@ -42,12 +42,8 @@ jobs:
           name: "Install dependencies"
           command: npm install
       - run:
-          name: "echo an env var that is part of our context"
-          command: |
-            echo $GITHUB_TOKEN
-      - run:
           name: "Publish the app"
-          command: GITHUB_TOKEN=$GITHUB_TOKEN npm run publish
+          command: npm run publish
           environment:
             GITHUB_TOKEN: $GITHUB_TOKEN
 
