@@ -44,5 +44,5 @@ jobs:
           name: "Publish the app"
           command: npm run publish
           environment:
-            GITHUB_TOKEN: $GH_TOKEN
+            GITHUB_TOKEN: $GITHUB_TOKEN
 
