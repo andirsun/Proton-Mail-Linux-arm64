@@ -14,8 +14,8 @@
         "appBundleId": "ch.protonmail.desktop",
         "appUserModelId": "com.squirrel.proton_mail.ProtonMail",
         "copyright": "Copyright (c) 2024, Proton AG <contact@protonmail.com>",
-        "githubUser": "ProtonMail",
-        "githubRepo": "inbox-desktop"
+        "githubUser": "andirsun",
+        "githubRepo": "Proton-Mail-Linux-arm64"
     },
     "main": ".webpack/main",
     "scripts": {
